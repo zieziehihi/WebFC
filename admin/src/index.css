@@ -1,0 +1,37 @@
+@import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400..700&family=Homemade+Apple&family=Outfit:wght@100..900&family=Pacifico&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Prata&display=swap');
+@import "tailwindcss";
+  
+select, input, textarea{
+    border: 1px solid #c2c2c2;
+    outline-color: #C586A5;
+    border-radius: 4px;
+}
+
+option {
+    text-align: center;
+}
+
+input {
+    text-align: center;
+    line-height: 2.0rem; /* Điều chỉnh theo chiều cao của input */
+}
+
+textarea::placeholder {
+    text-align: center;
+}  
+
+.active{
+    background-color: #ffebf5;
+    border-color: #C586A5;
+}
+
+.custom-confirm-alert .react-confirm-alert-title {
+    text-align: center; /* Căn giữa tiêu đề */
+}
+
+.custom-confirm-alert .react-confirm-alert-button-group {
+    display: flex;
+    justify-content: center; /* Căn giữa các nút */
+}
+
+  
