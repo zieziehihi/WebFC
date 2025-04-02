@@ -74,8 +74,8 @@ const placedOrderPaypal = async (req, res) => {
                 description: 'Thanh toán đơn hàng',
             }],
             application_context: {
-                return_url: `${process.env.FRONTEND_URL}/verify-paypal-payment`,
-                cancel_url: `${process.env.FRONTEND_URL}/payment-cancel`
+                return_url: `${process.env.FRONTEND_URL}verify-paypal-payment`,
+                cancel_url: `${process.env.FRONTEND_URL}payment-cancel`
             }
         });
 
@@ -132,7 +132,7 @@ const verifyPaypalPayment = async (req, res) => {
             await orderModel.findByIdAndUpdate(orderId, {
                 payment: true,
                 paypalPaymentId: capture.result.id,
-                status: 'Đã xác nhận' // Đảm bảo trường status là Object
+                status: 'Đã đặt hàng' // Đảm bảo trường status là Object
             });
 
             res.json({
@@ -186,7 +186,5 @@ const userOrders = async (req, res) => {
         res.json({ success: false, message: error.message })
     }
 }
-
-
 
 export { placedOrder, placedOrderPaypal, verifyPaypalPayment, allOrders, updateStatus, userOrders }

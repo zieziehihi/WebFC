@@ -3,6 +3,7 @@ import { NavLink } from 'react-router-dom'
 import { assets } from '../assets/assets'
 
 const Sidebar = () => {
+
     return (
         <div className='w-[15%] min-h-screen border-r-1'>
 
@@ -23,6 +24,7 @@ const Sidebar = () => {
                     <img className='w-5 h-5' src={assets.add_icon} alt='' />
                     <p className='hidden md:block'>Đơn hàng</p>
                 </NavLink>
+
             </div>
         </div>
     )

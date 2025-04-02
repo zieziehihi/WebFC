@@ -24,7 +24,7 @@ const VerifyPaypal = () => {
                 if (response.data.success) {
                     setCartItems({});
                     toast.success("Thanh toán thành công!");
-                    navigate("/orders");
+                    navigate("/payment-success");
                 } else {
                     toast.error(response.data.message);
                 }

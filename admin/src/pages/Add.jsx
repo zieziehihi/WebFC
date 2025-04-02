@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { assets } from '../assets/assets'
 import axios from 'axios'
-import { backendUrl } from '../context/AdminContext'
+import { backendUrl } from '../context/AdminContext.jsx';
 import { toast } from 'react-toastify'
 
 const Add = ({ token }) => {
@@ -36,7 +36,9 @@ const Add = ({ token }) => {
             image3 && formData.append("image3", image3)
             image4 && formData.append("image4", image4)
 
-            const response = await axios.post(`${backendUrl}/api/product/add`, formData, { headers: { token } })
+            const response = await axios.post(`${backendUrl}/api/product/add`, formData, {
+                headers: { Authorization: `Bearer ${token}` }
+            })
 
             console.log(response.data)
 

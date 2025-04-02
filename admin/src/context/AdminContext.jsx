@@ -1,3 +1,10 @@
-export const backendUrl = import.meta.env.VITE_BACKEND_URL
+import React, { createContext } from 'react';
+import AdminContextProvider from './AdminContextProvider';
 
-export const currency = 'VNĐ'
+// Tạo context
+export const AdminContext = createContext();
+export const backendUrl = import.meta.env.VITE_BACKEND_URL;
+export const currency = 'VNĐ';
+
+<AdminContextProvider />
+

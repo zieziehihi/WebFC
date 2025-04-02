@@ -15,6 +15,7 @@ import Footer from './components/Footer'
 import SearchBar from './components/SearchBar'
 import VerifyPaypal from './pages/VerifyPaypal'
 import OrderDetail from './pages/OrderDetail'
+import PaymentSuccess from './pages/PaymentSuccess'
 import { ToastContainer } from 'react-toastify';
 
 
@@ -37,6 +38,7 @@ const App = () => {
         <Route path="/verify-paypal-payment" element={<VerifyPaypal />} />
         <Route path='/product' element={<Product />} />
         <Route path="/product/:productId" element={<Product />} />
+        <Route path='/payment-success' element={<PaymentSuccess />} />
       </Routes>
       <Footer />
     </div>
