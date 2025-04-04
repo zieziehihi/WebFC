@@ -1,7 +1,8 @@
 import { v2 as cloudinary } from 'cloudinary';
 import productModel from '../models/productModel.js';
+import inventoryModel from '../models/inventoryModel.js';
 
-// ADD 
+// ADD
 const addProduct = async (req, res) => {
     try {
         const { name, description, price, category, sizes, bestseller } = req.body;
@@ -18,10 +19,8 @@ const addProduct = async (req, res) => {
             } catch (error) {
                 return res.json({ success: false, message: "Invalid sizes format. Định dạng hợp lệ: [\"S\", \"M\", \"L\"]" });
             }
-
         } else if (Array.isArray(sizes)) {
-            parsedSizes = sizes; // Nếu sizes đã là mảng, không cần parse
-
+            parsedSizes = sizes;
         } else {
             return res.json({ success: false, message: "Sizes phải là một mảng hoặc chuỗi JSON hợp lệ" });
         }
@@ -51,40 +50,51 @@ const addProduct = async (req, res) => {
             date: Date.now()
         };
 
-        console.log(productData);
-
         const product = new productModel(productData);
         await product.save();
 
-        res.json({ success: true, message: 'Đã thêm sản phẩm' });
+        // Tạo bản ghi tồn kho cho sản phẩm mới (quantity mặc định là 0)
+        const inventoryData = {
+            productId: product._id,
+            quantity: 0,
+        };
+        const inventory = new inventoryModel(inventoryData);
+        await inventory.save();
 
+        res.json({ success: true, message: 'Đã thêm sản phẩm' });
     } catch (error) {
         console.log(error);
         res.json({ success: false, message: error.message });
     }
 };
 
-// LIST 
+// LIST
 const listProducts = async (req, res) => {
-
     try {
         const products = await productModel.find({});
-        res.json({ success: true, products });
+        const inventory = await inventoryModel.find({});
 
+        // Kết hợp thông tin sản phẩm với tồn kho
+        const productsWithInventory = products.map(product => {
+            const inventoryItem = inventory.find(item => item.productId.toString() === product._id.toString());
+            return {
+                ...product._doc,
+                quantity: inventoryItem ? inventoryItem.quantity : 0,
+                inventoryId: inventoryItem ? inventoryItem._id : null,
+            };
+        });
+
+        res.json({ success: true, products: productsWithInventory });
     } catch (error) {
         console.log(error);
         res.json({ success: false, message: error.message });
     }
 };
-
 
 // UPDATE
 const updateProduct = async (req, res) => {
     try {
-        const { productId, name, description, price, category, sizes, bestseller } = req.body;
-
-        // Log để kiểm tra dữ liệu nhận được
-        console.log("Received sizes:", sizes);
+        const { productId, name, description, price, category, sizes, bestseller, quantity } = req.body;
 
         // Xử lý sizes một cách an toàn
         let parsedSizes;
@@ -131,6 +141,19 @@ const updateProduct = async (req, res) => {
         product.date = Date.now();
 
         await product.save();
+
+        // Cập nhật số lượng tồn kho nếu có
+        if (quantity !== undefined) {
+            let inventoryItem = await inventoryModel.findOne({ productId });
+            if (!inventoryItem) {
+                inventoryItem = new inventoryModel({ productId, quantity: Number(quantity) });
+            } else {
+                inventoryItem.quantity = Number(quantity);
+            }
+            if (inventoryItem.quantity < 0) inventoryItem.quantity = 0;
+            await inventoryItem.save();
+        }
+
         res.json({ success: true, message: 'Cập nhật sản phẩm thành công' });
     } catch (error) {
         console.log(error);
@@ -141,9 +164,11 @@ const updateProduct = async (req, res) => {
 // REMOVE
 const removeProduct = async (req, res) => {
     try {
-        await productModel.findByIdAndDelete(req.body.id);
+        const productId = req.body.id;
+        await productModel.findByIdAndDelete(productId);
+        // Xóa bản ghi tồn kho liên quan
+        await inventoryModel.deleteOne({ productId });
         res.json({ success: true, message: 'Đã xoá sản phẩm' });
-
     } catch (error) {
         console.log(error);
         res.json({ success: false, message: error.message });
@@ -155,12 +180,41 @@ const singleProduct = async (req, res) => {
     try {
         const { productId } = req.body;
         const product = await productModel.findById(productId);
-        res.json({ success: true, product });
+        const inventoryItem = await inventoryModel.findOne({ productId });
 
+        if (!product) {
+            return res.json({ success: false, message: "Sản phẩm không tồn tại" });
+        }
+
+        const productWithInventory = {
+            ...product._doc,
+            quantity: inventoryItem ? inventoryItem.quantity : 0,
+            inventoryId: inventoryItem ? inventoryItem._id : null,
+        };
+
+        res.json({ success: true, product: productWithInventory });
     } catch (error) {
         console.log(error);
         res.json({ success: false, message: error.message });
     }
 };
 
-export { listProducts, addProduct, updateProduct, removeProduct, singleProduct };
+// Cập nhật số lượng tồn kho
+const updateInventory = async (req, res) => {
+    try {
+        const { productId, quantity } = req.body;
+        let inventoryItem = await inventoryModel.findOne({ productId });
+        if (!inventoryItem) {
+            inventoryItem = new inventoryModel({ productId, quantity });
+        } else {
+            inventoryItem.quantity = quantity;
+        }
+        if (inventoryItem.quantity < 0) inventoryItem.quantity = 0;
+        await inventoryItem.save();
+        res.json({ success: true, inventoryItem });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+export { addProduct, listProducts, updateProduct, removeProduct, singleProduct, updateInventory };

@@ -9,6 +9,7 @@ import Login from './components/Login'
 import { ToastContainer } from 'react-toastify';
 import Home from './pages/Home'
 import Statistic from './pages/Statistic'
+import Inventory from './components/Inventory';
 
 const App = () => {
 
@@ -37,6 +38,7 @@ const App = () => {
                 <Route path='/list' element={<List token={token} />} />
                 <Route path='/orders' element={<Orders token={token} />} />
                 <Route path="/statistic" element={<Statistic token={token} />} />
+                <Route path="/inventory" element={<Inventory token={token} />} />
               </Routes>
             </div>
           </div>

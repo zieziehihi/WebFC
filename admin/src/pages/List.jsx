@@ -5,7 +5,7 @@ import { toast } from 'react-toastify';
 import Update from './Update';
 import { confirmAlert } from "react-confirm-alert";
 import "react-confirm-alert/src/react-confirm-alert.css";
-import '../index.css'
+import '../index.css';
 
 const List = ({ token }) => {
     const [list, setList] = useState([]);
@@ -13,7 +13,9 @@ const List = ({ token }) => {
 
     const fetchList = async () => {
         try {
-            const response = await axios.get(`${backendUrl}/api/product/list`);
+            const response = await axios.get(`${backendUrl}/api/product/list`, {
+                headers: { token }
+            });
             if (response.data.success) {
                 setList(response.data.products);
             } else {
@@ -31,10 +33,14 @@ const List = ({ token }) => {
             message: "Bạn chắc chắn muốn xoá sản phẩm này chứ?",
             buttons: [
                 {
-                    label: "Xóa", onClick: async () => {
+                    label: "Xóa",
+                    onClick: async () => {
                         try {
-                            const response = await axios.post(`${backendUrl}/api/product/remove`, { id }, { headers: { token } });
-
+                            const response = await axios.post(
+                                `${backendUrl}/api/product/remove`,
+                                { id },
+                                { headers: { token } }
+                            );
                             if (response.data.success) {
                                 toast.success('Xoá sản phẩm thành công');
                                 await fetchList();
@@ -48,18 +54,41 @@ const List = ({ token }) => {
                     }
                 },
                 {
-                    label: "Hủy", onClick: () => toast.info("Đã hủy xóa sản phẩm")
+                    label: "Hủy",
+                    onClick: () => toast.info("Đã hủy xóa sản phẩm")
                 }
             ],
-
             overlayClassName: "custom-confirm-alert"
         });
     };
 
+    const updateQuantity = async (productId, newQuantity) => {
+        if (newQuantity < 0) {
+            toast.error('Số lượng không thể âm!');
+            return;
+        }
+
+        try {
+            const response = await axios.put(
+                `${backendUrl}/api/inventory/update`,
+                { productId, quantity: newQuantity },
+                { headers: { token } }
+            );
+            if (response.data.success) {
+                toast.success('Cập nhật số lượng thành công!');
+                await fetchList();
+            } else {
+                toast.error(response.data.message);
+            }
+        } catch (error) {
+            console.log(error);
+            toast.error(error.message);
+        }
+    };
 
     useEffect(() => {
         fetchList();
-    }, []);
+    }, [token]);
 
     return (
         <>
@@ -68,35 +97,66 @@ const List = ({ token }) => {
             {editingProduct && (
                 <div className='border p-4 mb-4 bg-gray-100 rounded'>
                     <h3 className='text-center text-lg font-bold mb-2'>Cập nhật sản phẩm</h3>
-                    <Update product={editingProduct} onUpdateSuccess={() => { fetchList(); setEditingProduct(null); }} />
-                    <button className='mt-2 w-28 bg-red-500 text-white py-1 px-3 rounded hover:bg-red-600' onClick={() => setEditingProduct(null)}>
+                    <Update
+                        product={editingProduct}
+                        token={token}
+                        onUpdateSuccess={() => {
+                            fetchList();
+                            setEditingProduct(null);
+                        }}
+                    />
+                    <button
+                        className='mt-2 w-28 bg-red-500 text-white py-1 px-3 rounded hover:bg-red-600'
+                        onClick={() => setEditingProduct(null)}
+                    >
                         Hủy
                     </button>
                 </div>
             )}
 
             <div className='flex flex-col gap-2'>
-                <div className='hidden md:grid grid-cols-[1fr_3fr_1fr_1fr_1fr] items-center py-1 px-2 border bg-gray-100 text-sm'>
+                <div className='hidden md:grid grid-cols-[1fr_3fr_1fr_1fr_1fr_1fr] items-center py-1 px-2 border bg-gray-100 text-sm'>
                     <b>Hình ảnh</b>
                     <b>Tên sản phẩm</b>
                     <b className='text-center'>Danh mục</b>
                     <b className='text-center'>Giá</b>
+                    <b className='text-center'>Tồn kho</b>
                     <b className='text-center'>Thao tác</b>
                 </div>
 
                 {list.map((item, index) => (
                     <div
-                        className='grid grid-cols-[1fr_3fr_1fr] md:grid-cols-[1fr_3fr_1fr_1fr_1fr] items-center gap-2 py-1 px-2 border text-sm' key={index} >
-
+                        className='grid grid-cols-[1fr_3fr_1fr] md:grid-cols-[1fr_3fr_1fr_1fr_1fr_1fr] items-center gap-2 py-1 px-2 border text-sm'
+                        key={index}
+                    >
                         <img className='w-18' src={item.image[0]} alt='' />
                         <p>{item.name}</p>
                         <p className='text-center'>{item.category}</p>
                         <p className='text-center'>{item.price.toLocaleString('vi-VN')} {currency}</p>
-
+                        <div className='text-center'>
+                            <input
+                                type="number"
+                                value={item.quantity || 0}
+                                onChange={(e) => {
+                                    const newQuantity = parseInt(e.target.value) || 0;
+                                    updateQuantity(item._id, newQuantity);
+                                }}
+                                className="p-1 w-20 border border-gray-300 rounded"
+                            />
+                        </div>
                         <div className='grid md:grid-cols-[0.5fr_0.5fr]'>
-                            <p onClick={() => setEditingProduct(item)} className='md:text-center cursor-pointer text-blue-700'>Sửa</p>
-                            <p onClick={() => removeProduct(item._id)} className='md:text-center cursor-pointer text-red-700'>Xoá</p>
-
+                            <p
+                                onClick={() => setEditingProduct(item)}
+                                className='md:text-center cursor-pointer text-blue-700'
+                            >
+                                Sửa
+                            </p>
+                            <p
+                                onClick={() => removeProduct(item._id)}
+                                className='md:text-center cursor-pointer text-red-700'
+                            >
+                                Xoá
+                            </p>
                         </div>
                     </div>
                 ))}
